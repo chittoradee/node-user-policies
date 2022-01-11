@@ -15,11 +15,13 @@ const policyInfoSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'PolicyCategory'
         },
-        collection_id:{
-            type : String
+        collection_id:{ 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'Agent'
         },
         company_collection_id:{
-            type : String
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'PolicyCarrier'
         },
         user_id:{
             type: mongoose.Schema.Types.ObjectId, 
@@ -36,7 +38,13 @@ policyInfoSchema.methods.toJSON = function () {
     const policyinfoObject = policyinfo.toObject();
     return policyinfoObject;
 }
-
+policyInfoSchema.virtual('policycategory',{
+    ref:'lob',
+    localField: '_id',
+    foreignField: 'policy_category'
+});
+policyInfoSchema.set('toObject', { virtuals: true });
+policyInfoSchema.set('toJSON', { virtuals: true });
 const PolicyInfo = mongoose.model('policy_info',policyInfoSchema);
 
 module.exports = { PolicyInfo };

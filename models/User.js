@@ -40,7 +40,13 @@ userSchema.methods.toJSON = function () {
     const userObject = user.toObject();
     return userObject;
 }
-
+userSchema.virtual('policyinfo',{
+    ref:'policy_info',
+    localField: '_id',
+    foreignField: 'user_id'
+});
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
 const User = mongoose.model('users',userSchema);
 
 module.exports = { User };

@@ -1,5 +1,9 @@
 const { PolicyInfo } = require("../models/PolicyInfo");
+const { User } = require("../models/User");
 var path = require("path");
+const { PolicyCategory } = require("../models/PolicyCategory");
+const { Agent } = require("../models/Agent");
+const { PolicyCarrier } = require("../models/PolicyCarrier");
 const upload = async (req, res) => {
 	try {
 		if (req.file == undefined) {
@@ -7,7 +11,7 @@ const upload = async (req, res) => {
 		}
 		let filepath = __dirname + "/../uploads/" + req.file.filename;
 		const fileExt = path.extname(req.file.filename);
-		if (fileExt == ".xlsx"){
+		if (fileExt == ".xlsx") {
 			const readXlsxFile = require("read-excel-file/node");
 			readXlsxFile(filepath).then((rows) => {
 				// skip header
@@ -83,6 +87,90 @@ const upload = async (req, res) => {
 	}
 };
 
+const searchInfo = async (req, res) => {
+	const name = req.query.username || "";
+	const result = await PolicyInfo.aggregate([
+		{
+			$lookup: {
+				from: User.collection.name,
+				localField: "user_id",
+				foreignField: "_id",
+				as: "user",
+			},
+		},
+		{
+			$lookup: {
+				from: PolicyCategory.collection.name,
+				localField: "policy_category",
+				foreignField: "_id",
+				as: "policycategory",
+			},
+		},
+		{
+			$lookup: {
+				from: Agent.collection.name,
+				localField: "collection_id",
+				foreignField: "_id",
+				as: "agent",
+			},
+		},
+		{
+			$lookup: {
+				from: PolicyCarrier.collection.name,
+				localField: "company_collection_id",
+				foreignField: "_id",
+				as: "policycarrier",
+			},
+		},
+		{ $unwind: "$user" },
+		{ $unwind: "$policycategory" },
+		{ $unwind: "$agent" },
+		{ $unwind: "$policycarrier" },
+		{
+			$match: { "user.first_name": name },
+		},
+		{
+			$project: {
+				first_name: "$user.first_name",
+				category_name: "$policycategory.category_name",
+				agent_name: "$agent.name",
+				company_name: "$policycarrier.company_name",
+				policy_number: 1,
+				policy_start_date: 1,
+				policy_end_date: 1,
+			},
+		},
+	]);
+
+	res.status(200).send(result);
+};
+
+const getPolicyInfoByUser = async (req, res) => {
+	const users = await User.find({}).populate({
+		path: "policyinfo",
+		model: PolicyInfo,
+		populate: [
+		  {
+			path: "policy_category",
+			model: PolicyCategory,
+			select:['category_name']
+		  },{
+			path: "collection_id",
+			model: Agent,
+			select:['name']
+		  },
+		  {
+			path: "company_collection_id",
+			model: PolicyCarrier,
+			select:['company_name']
+		  }
+		]
+	  });
+	res.status(200).send(users);
+};
+
 module.exports = {
 	upload,
+	searchInfo,
+	getPolicyInfoByUser,
 };

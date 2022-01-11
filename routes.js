@@ -13,5 +13,7 @@ router.post('/useraccount-upload',upload.single("file"), useraccountController.u
 router.post('/policycategory-upload',upload.single("file"), policycategoryController.upload);
 router.post('/policycarrier-upload',upload.single("file"), policycarrierController.upload);
 router.post('/policyinfo-upload',upload.single("file"), policyinfoController.upload);
+router.get('/search-info',policyinfoController.searchInfo);
+router.get('/get-policy-info',policyinfoController.getPolicyInfoByUser);
 
-module.exports = router;
+module.exports = router;    

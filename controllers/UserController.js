@@ -15,7 +15,7 @@ const upload = async (req, res) => {
 				let users = [];
 				rows.forEach((row) => {
 					let user = {
-						firstname: row[0],
+						first_name: row[0],
 						dob: row[1],
 						address: row[2],
 						phonenumber: row[3],
@@ -52,7 +52,7 @@ const upload = async (req, res) => {
 				})
 				.on("data", (row) => {
 					let user = {
-						firstname: row["firstname"],
+						first_name: row["firstname"],
 						dob: row["dob"],
 						address: row["address"],
 						phonenumber: row["phonenumber"],
