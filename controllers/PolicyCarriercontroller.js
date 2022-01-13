@@ -1,5 +1,5 @@
-const { PolicyCarrier } = require("../models/PolicyCarrier");
 var path = require("path");
+const { Worker } = require("worker_threads");
 const upload = async (req, res) => {
 	try {
 		if (req.file == undefined) {
@@ -7,7 +7,31 @@ const upload = async (req, res) => {
 		}
 		let filepath = __dirname + "/../uploads/" + req.file.filename;
 		const fileExt = path.extname(req.file.filename);
-		if (fileExt == ".xlsx") {
+
+		const worker = new Worker("./controllers/policycarrierworker.js", {
+			workerData: { filepath: filepath, fileExt: fileExt },
+		});
+
+		worker.once("message", (result) => {
+			res.status(200).send({
+				message: result.message,
+			});
+		});
+
+		worker.on("error", (error) => {
+			res.status(500).send({
+				message: "Fail to import data into database!",
+				error: error.message,
+			});
+		});
+
+		worker.on("exit", (exitCode) => {
+			res.status(200).send({
+				message: "Uploaded the file successfully: " + req.file.originalname,
+			});
+		});
+
+		/* if (fileExt == ".xlsx") {
 			const readXlsxFile = require("read-excel-file/node");
 			readXlsxFile(filepath).then((rows) => {
 				// skip header
@@ -63,7 +87,7 @@ const upload = async (req, res) => {
 							});
 						});
 				});
-		}
+		} */
 	} catch (error) {
 		res.status(500).send({
 			message: "Could not upload the file: " + req.file.originalname,
